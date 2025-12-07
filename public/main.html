@@ -1,0 +1,2520 @@
+<!DOCTYPE html>
+<html dir="rtl" lang="ar">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>نظام الطلبات - Vndro</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: 'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Arial', sans-serif;
+      background: linear-gradient(135deg, #FFF9DC 0%, #FFE27A 100%);
+      min-height: 100vh;
+      direction: rtl;
+      color: #333;
+    }
+    .hidden { display: none !important; }
+
+    @keyframes spin { 0% { transform: rotate(0deg);} 100% { transform: rotate(360deg);} }
+    @keyframes shake {
+      0%, 100% { transform: translateX(0);}
+      10%, 30%, 50%, 70%, 90% { transform: translateX(-10px);}
+      20%, 40%, 60%, 80% { transform: translateX(10px);}
+    }
+    @keyframes slideDown { from { opacity: 0; transform: translate(-50%, -100%);} to { opacity: 1; transform: translate(-50%, 0);} }
+    @keyframes slideIn { from { opacity: 0; transform: translateY(-30px);} to { opacity: 1; transform: translateY(0);} }
+    @keyframes pageFade {
+      from { opacity: 0; transform: translateY(15px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .page.page-animate { animation: pageFade .35s ease-out; }
+
+    /* LOGIN PAGE (keep as edited version) */
+    #loginPage {
+      display: flex; align-items: center; justify-content: center;
+      min-height: 100vh; width: 100%; background: transparent;
+      position: absolute; inset: 0; z-index: 2;
+    }
+    .login-container {
+      width: 100%; max-width: 380px; margin: 20px;
+      text-align: center; animation: slideIn .5s ease-out;
+    }
+    .login-header { margin-bottom: 32px; background: transparent; }
+    .company-logo {
+      display: block; height: auto !important;
+      max-width: 180px; margin: 0 auto; background: transparent;
+    }
+    @media (max-width: 600px){
+      .company-logo{ max-width: 140px; }
+    }
+    .login-form { padding: 0; }
+    .form-group { margin-bottom: 18px; text-align: right; }
+    .form-group label {
+      display:block; color:#333; font-size:14px;
+      font-weight:500; margin-bottom:6px;
+    }
+    .form-group input {
+      width:100%; padding:12px 18px; border:1px solid #e1e8ed;
+      border-radius:999px; font-size:15px; font-family:inherit;
+      background:#ffffff; transition:.3s;
+    }
+    .form-group input::placeholder { color:#9ca3af; font-size:14px; }
+    .form-group input:focus {
+      outline:none; border-color:#F4C022;
+      box-shadow:0 0 0 3px rgba(244,192,34,.25);
+    }
+    .login-form .submit-btn {
+      width:100%; padding:14px; margin-top:8px;
+      background:#F4C022; color:#111827; border:none;
+      border-radius:999px; font-size:17px; font-weight:600;
+      cursor:pointer; transition:.3s; position:relative; overflow:hidden;
+    }
+    .login-form .submit-btn:hover:not(:disabled) {
+      transform: translateY(-1px);
+      box-shadow:0 8px 18px rgba(244,192,34,.45);
+    }
+    .login-form .submit-btn:disabled {
+      background:#d1d5db; cursor:not-allowed; box-shadow:none;
+    }
+    .spinner {
+      display:none; width:20px; height:20px;
+      border:3px solid rgba(51,51,51,.2);
+      border-radius:50%; border-top-color:#333;
+      animation:spin 1s infinite; margin:0 auto;
+    }
+    .error-message {
+      background:#fee; color:#c33; padding:10px 14px;
+      border-radius:10px; margin-top:16px; font-size:13px;
+      display:none; animation: shake .5s; text-align:center;
+    }
+
+    /* HEADER */
+    .header {
+      background: linear-gradient(135deg,#FDD939 0%,#CE9D30 100%);
+      color:#333; padding:20px 0; box-shadow:0 2px 10px rgba(0,0,0,.1);
+    }
+    .header-content {
+      max-width:1200px; margin:0 auto; padding:0 20px;
+      display:flex; justify-content:space-between; align-items:center;
+      flex-wrap:wrap; gap:20px;
+    }
+    .header-left { display:flex; align-items:center; gap:20px; }
+    .header-right { display:flex; align-items:center; gap:10px; }
+    .welcome-message { font-size:24px; font-weight:600; color:#333; }
+    .header .company-logo{
+      max-width:150px; margin-bottom:0; mix-blend-mode:multiply; background:transparent;
+    }
+    @media (max-width: 600px){
+      .header .company-logo{ max-width:96px; }
+    }
+
+    .logout-btn, .secondary-btn {
+      background:rgba(156,156,156,.2); color:#333;
+      border:2px solid #9C9C9C; padding:10px 20px;
+      border-radius:8px; font-size:16px; cursor:pointer;
+      transition:.3s; font-family:inherit;
+    }
+    .logout-btn:hover, .secondary-btn:hover {
+      background:#9C9C9C; color:white; border-color:#9C9C9C;
+    }
+
+    /* NEW: Home icon button (SVG vector) */
+    .icon-btn {
+      background: transparent;
+      border: none;
+      cursor: pointer;
+      padding: 6px;
+      border-radius: 999px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .icon-btn svg {
+      width: 30px;
+      height: 30px;
+      stroke: #333;
+      stroke-width: 2;
+      fill: none;
+    }
+    .icon-btn:hover {
+      background: rgba(255,255,255,0.5);
+    }
+
+    .container { max-width:1200px; margin:0 auto; padding:20px; }
+
+    .loading {
+      text-align:center; padding:60px; background:white;
+      border-radius:12px; margin:20px 0;
+      box-shadow:0 2px 10px rgba(0,0,0,.05);
+    }
+    .loading-spinner {
+      width:50px; height:50px;
+      border:4px solid #f3f3f3; border-top:4px solid #CE9D30;
+      border-radius:50%; animation:spin 1s linear infinite;
+      margin:0 auto 20px;
+    }
+
+    .products-section, .card-section {
+      background:white; border-radius:12px; overflow:hidden;
+      box-shadow:0 2px 10px rgba(0,0,0,.05); margin-bottom:30px;
+    }
+    .card-body { padding:20px; }
+    .table-responsive { overflow-x:auto; }
+    table { width:100%; border-collapse:collapse; }
+    thead { background:#f8f9fa; }
+    th {
+      padding:15px; text-align:right; font-weight:600;
+      color:#555; border-bottom:2px solid #e9ecef;
+      white-space:nowrap;
+    }
+    td {
+      padding:15px; border-bottom:1px solid #f1f3f5;
+      vertical-align:middle;
+    }
+    tbody tr:hover { background:#f8f9fa; transition: background-color .2s; }
+
+    .product-image {
+      width:60px; height:60px; object-fit:cover;
+      border-radius:8px; box-shadow:0 2px 5px rgba(0,0,0,.1);
+    }
+
+    .submit-section { text-align:center; margin-top:30px; }
+    /* NEW: sticky behaviour for order + cart confirm sections only */
+    .submit-section.sticky-actions {
+      position: sticky;
+      bottom: 0;
+      background: rgba(255, 249, 220, 0.95);
+      padding-top: 10px;
+      padding-bottom: 10px;
+      z-index: 100;
+      backdrop-filter: blur(4px);
+    }
+
+    .submit-btn {
+      background:linear-gradient(135deg,#FDD939 0%,#CE9D30 100%);
+      color:#333; border:none; padding:15px 50px;
+      border-radius:10px; font-size:18px; font-weight:600;
+      cursor:pointer; transition:.3s;
+      box-shadow:0 4px 15px rgba(206,157,48,.3);
+    }
+    .submit-btn:hover:not(:disabled) {
+      transform: translateY(-2px);
+      box-shadow:0 6px 20px rgba(206,157,48,.4);
+    }
+    .submit-btn:disabled {
+      background:#9C9C9C; cursor:not-allowed; color:white;
+    }
+
+    .success-message {
+      position:fixed; top:20px; left:50%;
+      transform:translateX(-50%);
+      background:#4caf50; color:white;
+      padding:15px 30px; border-radius:8px;
+      box-shadow:0 4px 12px rgba(0,0,0,.15);
+      display:none; animation: slideDown .5s; z-index:1000;
+    }
+
+    .quantity-container { display:flex; flex-direction:column; gap:4px; }
+    .quantity-input {
+      width:90px; padding:8px 10px; border:2px solid #e9ecef;
+      border-radius:8px; font-size:15px; font-family:inherit;
+      text-align:center;
+    }
+    .quantity-input:focus {
+      outline:none; border-color:#CE9D30;
+      box-shadow:0 0 0 2px rgba(253,217,57,.3);
+    }
+    .warning { display:none; font-size:11px; color:#c0392b; }
+
+    /* NEW: +/- controls beside quantities */
+    .qty-controls {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 4px;
+    }
+    .qty-btn {
+      width: 28px;
+      height: 28px;
+      border-radius: 6px;
+      border: 1px solid #e1e8ed;
+      background: #f8f9fa;
+      font-size: 18px;
+      line-height: 1;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0;
+    }
+    .qty-btn:hover {
+      background: #FFE27A;
+      border-color: #F4C022;
+    }
+
+    .restricted-hide { display: none !important; }
+
+    .price-note {
+      padding:15px 20px 0;
+      font-size:13px; color:#777;
+    }
+
+    /* NEW: Category tabs above products table */
+    .category-tabs {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      padding: 10px 20px 5px;
+      border-bottom: 1px solid #f1f3f5;
+    }
+    .category-tab {
+      border: none;
+      padding: 6px 14px;
+      border-radius: 999px;
+      background: #f8f9fa;
+      font-size: 13px;
+      cursor: pointer;
+      font-family: inherit;
+      transition: background .2s, color .2s, box-shadow .2s, transform .1s;
+      white-space: nowrap;
+    }
+    .category-tab:hover {
+      background: #FFE27A;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+      transform: translateY(-1px);
+    }
+    .category-tab.active {
+      background: linear-gradient(135deg,#FDD939 0%,#CE9D30 100%);
+      color: #333;
+      box-shadow: 0 3px 10px rgba(206,157,48,0.35);
+    }
+
+    .cart-total-box {
+      margin:20px 0 10px;
+      background: rgba(253,217,57,0.12); /* very transparent yellow */
+      border-radius:10px; padding:15px 20px;
+      display:flex; justify-content:space-between;
+      align-items:center; flex-wrap:wrap; gap:10px;
+      font-weight:600;
+    }
+    .cart-total-label { color:#555; }
+    .cart-total-value { font-size:18px; }
+
+    /* L2 mode page */
+    #l2ModePage .mode-container {
+      max-width:500px; margin:60px auto; background:#fff;
+      border-radius:16px; box-shadow:0 10px 30px rgba(0,0,0,.1);
+      padding:30px; text-align:center;
+    }
+    #l2ModePage h2 { margin-bottom:10px; }
+    #l2ModePage p { margin-bottom:25px; color:#555; }
+    .mode-buttons { display:flex; flex-direction:column; gap:15px; }
+    .mode-btn {
+      padding:14px 20px; border-radius:10px; border:none;
+      cursor:pointer; font-size:16px; font-weight:600;
+      font-family:inherit;
+      background:linear-gradient(135deg,#FDD939 0%,#CE9D30 100%);
+      color:#333; box-shadow:0 4px 12px rgba(206,157,48,.3);
+      transition:.2s;
+    }
+    .mode-btn.secondary {
+      background:#f5f5f5; box-shadow:none;
+      border:1px solid #ddd; color:#333;
+    }
+    .mode-btn:hover { transform:translateY(-1px); }
+
+    /* Branch select overlay */
+    #branchSelectOverlay {
+      position:fixed; inset:0; background:rgba(0,0,0,.4);
+      display:flex; align-items:center; justify-content:center;
+      z-index:999;
+    }
+    .branch-modal {
+      background:#fff; border-radius:16px;
+      padding:25px 20px; max-width:400px; width:100%;
+      box-shadow:0 10px 25px rgba(0,0,0,.2);
+    }
+    .branch-modal h3 { margin-bottom:10px; }
+    .branch-modal p { margin-bottom:15px; color:#555; }
+    .branch-modal select {
+      width:100%; padding:10px; border-radius:8px;
+      border:2px solid #e1e8ed; font-size:15px; margin-bottom:20px;
+    }
+    .branch-modal select:focus {
+      outline:none; border-color:#CE9D30;
+      box-shadow:0 0 0 2px rgba(253,217,57,.3);
+    }
+    .branch-modal-buttons {
+      display:flex; justify-content:flex-end; gap:10px;
+    }
+
+    /* Approval pages */
+    .tag {
+      display:inline-block; padding:4px 10px;
+      border-radius:999px; font-size:12px;
+      background:#f1f3f5; color:#555;
+    }
+    .tag-branch { background:#e8f5e9; color:#2e7d32; }
+    .tag-user { background:#e3f2fd; color:#1565c0; }
+    .tag-date { background:#fff3e0; color:#ef6c00; }
+
+    .filters-row {
+      display:flex; flex-wrap:wrap; gap:10px;
+      align-items:flex-end; margin-bottom:15px;
+    }
+    .filter-block {
+      display:flex; flex-direction:column;
+      gap:4px; min-width:160px;
+    }
+    .filter-label { font-size:13px; color:#555; }
+    .filters-row select, .filters-row input {
+      padding:8px 10px; border-radius:8px;
+      border:2px solid #e1e8ed; font-family:inherit; font-size:14px;
+    }
+    .filters-row select:focus, .filters-row input:focus {
+      outline:none; border-color:#CE9D30;
+      box-shadow:0 0 0 2px rgba(253,217,57,.3);
+    }
+    .sort-buttons { display:flex; gap:8px; margin-inline-start:auto; }
+
+    /* Global popup */
+    #globalPopupOverlay {
+      position:fixed; inset:0; background:rgba(0,0,0,.35);
+      display:flex; align-items:center; justify-content:center;
+      z-index:2000;
+    }
+    #globalPopupOverlay.hidden { display:none !important; }
+    .popup-card {
+      background:#fff; border-radius:16px;
+      max-width:400px; width:90%; padding:25px 20px;
+      text-align:center; box-shadow:0 10px 30px rgba(0,0,0,.2);
+      animation: slideDown .35s ease-out;
+    }
+    .popup-card h3 { margin-bottom:10px; font-size:20px; }
+    .popup-card p { margin-bottom:20px; font-size:14px; color:#555; }
+    .popup-actions { display:flex; justify-content:center; }
+
+    @media (max-width: 768px){
+      .header-content { text-align:center; }
+      .welcome-message { font-size:20px; }
+      table { font-size:14px; }
+      th,td { padding:10px 8px; }
+      .product-image { width:50px; height:50px; }
+      .submit-btn { width:100%; padding:15px 30px; }
+      .header-right { width:100%; justify-content:center; }
+      .cart-total-box { flex-direction:column; align-items:flex-start; }
+      .category-tabs {
+        padding: 10px 10px 5px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- LOGIN PAGE -->
+  <div id="loginPage">
+    <div class="login-container">
+      <div class="login-header">
+        <img src="https://www.vndro.com/wp-content/uploads/2024/09/Vndro.com-logo_Vector-1.jpg"
+             alt="Vndro Logo" class="company-logo">
+      </div>
+      <form class="login-form" id="loginForm">
+        <div class="form-group">
+          <label for="username">اسم المستخدم</label>
+          <input type="text" id="username" name="username" required autocomplete="username" placeholder="اسم المستخدم">
+        </div>
+        <div class="form-group">
+          <label for="password">كلمة المرور</label>
+          <input type="password" id="password" name="password" required autocomplete="current-password" placeholder="كلمة المرور">
+        </div>
+        <button type="submit" class="submit-btn" id="submitBtn">
+          <span id="btnText">تسجيل الدخول</span>
+          <div class="spinner" id="spinner"></div>
+        </button>
+        <div class="error-message" id="errorMessage"></div>
+      </form>
+    </div>
+  </div>
+
+  <!-- L2 MODE SELECTION PAGE -->
+  <div id="l2ModePage" class="hidden page">
+    <header class="header">
+      <div class="header-content">
+        <div class="header-left">
+          <img src="https://www.vndro.com/wp-content/uploads/2024/09/Vndro.com-logo_Vector-1.jpg"
+               alt="Vndro Logo" class="company-logo">
+          <h1 class="welcome-message" id="welcomeMessageL2">مرحباً</h1>
+        </div>
+        <div class="header-right">
+          <!-- Home icon -->
+          <button class="icon-btn" onclick="goHome()" aria-label="الصفحة الرئيسية">
+            <svg viewBox="0 0 24 24">
+              <path d="M4 10.5L12 4l8 6.5" />
+              <path d="M6.5 9.5V20h11V9.5" />
+            </svg>
+          </button>
+          <button class="logout-btn" onclick="logoutOrderSystem()">تسجيل الخروج</button>
+        </div>
+      </div>
+    </header>
+    <div class="container">
+      <div class="mode-container">
+        <h2>اختيار نوع العملية</h2>
+        <p>برجاء اختيار ما إذا كنت تريد إنشاء طلب جديد أو مراجعة واعتماد الطلبات المعلقة.</p>
+        <div class="mode-buttons">
+          <button class="mode-btn" onclick="startL2CreateOrder()">إنشاء طلب جديد</button>
+          <button class="mode-btn secondary" onclick="startL2ApproveOrders()">مراجعة واعتماد الطلبات المعلقة</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ORDER PAGE -->
+  <div id="orderPage" class="hidden page">
+    <header class="header">
+      <div class="header-content">
+        <div class="header-left">
+          <img src="https://www.vndro.com/wp-content/uploads/2024/09/Vndro.com-logo_Vector-1.jpg"
+               alt="Vndro Logo" class="company-logo">
+          <h1 class="welcome-message" id="welcomeMessage">مرحباً</h1>
+        </div>
+        <div class="header-right">
+          <!-- Home icon -->
+          <button class="icon-btn" onclick="goHome()" aria-label="الصفحة الرئيسية">
+            <svg viewBox="0 0 24 24">
+              <path d="M4 10.5L12 4l8 6.5" />
+              <path d="M6.5 9.5V20h11V9.5" />
+            </svg>
+          </button>
+          <button class="secondary-btn hidden" id="l2ApproveBtn" onclick="startL2ApproveOrders()">اعتماد الطلبات</button>
+          <button class="logout-btn" onclick="logoutOrderSystem()">تسجيل الخروج</button>
+        </div>
+      </div>
+    </header>
+
+    <div class="container">
+      <div class="loading" id="loadingState">
+        <div class="loading-spinner"></div>
+        <p>ج جاري تحميل البيانات...</p>
+      </div>
+
+      <div class="products-section hidden" id="productsSection">
+        <div class="price-note">تنبيه: جميع الأسعار المعروضة تشمل الضريبة.</div>
+
+        <!-- NEW: Category tabs -->
+        <div id="categoryTabs" class="category-tabs hidden"></div>
+
+        <div class="table-responsive">
+          <table>
+            <thead>
+              <tr>
+                <th>المنتج</th>
+                <th id="th-price">السعر بعد الضريبة</th>
+                <th>الكمية المطلوبة</th>
+                <th id="th-subtotal">المجموع الفرعي</th>
+              </tr>
+            </thead>
+            <tbody id="productsTableBody"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- NEW: sticky confirm section on order page -->
+      <div class="submit-section sticky-actions hidden" id="submitSection">
+        <button class="submit-btn" id="submitBtnOrder" onclick="submitOrder(event)">تأكيد الطلب</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- CART PAGE -->
+  <div id="cartPage" class="hidden page">
+    <header class="header">
+      <div class="header-content">
+        <div class="header-left">
+          <img src="https://www.vndro.com/wp-content/uploads/2024/09/Vndro.com-logo_Vector-1.jpg"
+               alt="Vndro Logo" class="company-logo">
+          <h1 class="welcome-message" id="welcomeMessageCart">مرحباً</h1>
+        </div>
+        <div class="header-right">
+          <!-- Home icon -->
+          <button class="icon-btn" onclick="goHome()" aria-label="الصفحة الرئيسية">
+            <svg viewBox="0 0 24 24">
+              <path d="M4 10.5L12 4l8 6.5" />
+              <path d="M6.5 9.5V20h11V9.5" />
+            </svg>
+          </button>
+          <button class="secondary-btn hidden" id="l2ApproveBtnCart" onclick="startL2ApproveOrders()">اعتماد الطلبات</button>
+          <button class="logout-btn" onclick="backToOrderFromCart()">تعديل الطلب</button>
+        </div>
+      </div>
+    </header>
+
+    <div class="container">
+      <div class="products-section">
+        <div style="text-align:center; font-weight:700; color:#333; margin:20px 0;">
+          برجاء مراجعة المنتجات قبل تأكيد وإرسال الطلب
+        </div>
+        <div class="price-note">تنبيه: جميع الأسعار المعروضة تشمل الضريبة.</div>
+        <div class="table-responsive">
+          <table>
+            <thead>
+              <tr>
+                <th>المنتج</th>
+                <th id="cart-th-price">السعر بعد الضريبة</th>
+                <th>الكمية</th>
+                <th id="cart-th-subtotal">المجموع الفرعي</th>
+              </tr>
+            </thead>
+            <tbody id="cartTableBody"></tbody>
+          </table>
+        </div>
+        <div class="cart-total-box" id="cartTotalBox">
+          <span class="cart-total-label">إجمالي الطلب (بعد الضريبة):</span>
+          <span class="cart-total-value" id="cartTotalValue">٠٫٠٠ ج.م</span>
+        </div>
+      </div>
+
+      <!-- NEW: sticky confirm section on cart page -->
+      <div class="submit-section sticky-actions">
+        <button class="submit-btn" id="cartConfirmBtn" onclick="confirmCart(event)">تأكيد وإرسال الطلب</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- CONFIRMATION PAGE -->
+  <div id="confirmationPage" class="hidden page">
+    <header class="header">
+      <div class="header-content">
+        <div class="header-left">
+          <img src="https://www.vndro.com/wp-content/uploads/2024/09/Vndro.com-logo_Vector-1.jpg"
+               alt="Vndro Logo" class="company-logo">
+          <h1 class="welcome-message" id="welcomeMessageConfirm">مرحباً</h1>
+        </div>
+        <div class="header-right">
+          <!-- Home icon -->
+          <button class="icon-btn" onclick="goHome()" aria-label="الصفحة الرئيسية">
+            <svg viewBox="0 0 24 24">
+              <path d="M4 10.5L12 4l8 6.5" />
+              <path d="M6.5 9.5V20h11V9.5" />
+            </svg>
+          </button>
+          <button class="secondary-btn hidden" id="l2ApproveBtnConfirm" onclick="startL2ApproveOrders()">اعتماد الطلبات</button>
+          <button class="logout-btn" onclick="logoutOrderSystem()">تسجيل الخروج</button>
+        </div>
+      </div>
+    </header>
+
+    <div class="container">
+      <div class="products-section">
+        <div id="confirmationStatusText"
+             style="text-align:center; font-weight:700; color:#27ae60; margin:20px 0;"></div>
+
+        <!-- NEW: Order serial number display -->
+        <div id="orderSerialBox"
+             style="text-align:center; margin:0 0 15px; font-size:16px; font-weight:700; color:#2c3e50; display:none;"></div>
+
+        <div class="price-note">تنبيه: جميع الأسعار المعروضة تشمل الضريبة.</div>
+        <div class="table-responsive">
+          <table>
+            <thead>
+              <tr>
+                <th>المنتج</th>
+                <th id="conf-th-price">السعر بعد الضريبة</th>
+                <th>الكمية</th>
+                <th id="conf-th-subtotal">المجموع الفرعي</th>
+              </tr>
+            </thead>
+            <tbody id="confirmationTableBody"></tbody>
+          </table>
+        </div>
+        <div style="text-align:center;margin:20px 0 30px;font-size:15px;color:#555;">
+          هذه الصفحة للتأكيد فقط ولا يمكن تعديل الطلب من خلالها.
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- APPROVAL LIST PAGE (L2) -->
+  <div id="approvalPage" class="hidden page">
+    <header class="header">
+      <div class="header-content">
+        <div class="header-left">
+          <img src="https://www.vndro.com/wp-content/uploads/2024/09/Vndro.com-logo_Vector-1.jpg"
+               alt="Vndro Logo" class="company-logo">
+          <h1 class="welcome-message" id="welcomeMessageApproval">مرحباً</h1>
+        </div>
+        <div class="header-right">
+          <!-- Home icon -->
+          <button class="icon-btn" onclick="goHome()" aria-label="الصفحة الرئيسية">
+            <svg viewBox="0 0 24 24">
+              <path d="M4 10.5L12 4l8 6.5" />
+              <path d="M6.5 9.5V20h11V9.5" />
+            </svg>
+          </button>
+          <button class="secondary-btn" onclick="startL2CreateOrder()">إنشاء طلب جديد</button>
+          <button class="logout-btn" onclick="logoutOrderSystem()">تسجيل الخروج</button>
+        </div>
+      </div>
+    </header>
+
+    <div class="container">
+      <div class="card-section">
+        <div class="card-body">
+          <h2 style="margin-bottom:10px;">جميع الطلبات (حسب الحالة)</h2>
+          <p style="color:#555;margin-bottom:20px;">
+            يمكنك تصفية الطلبات حسب الحالة أو الفرع، ثم اختيار الطلب لمراجعة تفاصيله واعتماده أو تعديله.
+          </p>
+
+          <div class="filters-row">
+            <div class="filter-block">
+              <span class="filter-label">حالة الطلب</span>
+              <select id="statusFilter" onchange="applyOrdersFilterAndRender()">
+                <option value="ALL">الكل</option>
+                <option value="Waiting">في انتظار الموافقة</option>
+                <option value="Approved">معتمد</option>
+                <option value="Cancelled">ملغي</option>
+              </select>
+            </div>
+            <div class="filter-block">
+              <span class="filter-label">بحث بالفرع</span>
+              <input type="text" id="branchSearch" placeholder="اكتب اسم الفرع..." oninput="applyOrdersFilterAndRender()">
+            </div>
+            <!-- NEW: search by order serial -->
+            <div class="filter-block">
+              <span class="filter-label">بحث برقم الطلب</span>
+              <input type="text" id="serialSearch" placeholder="اكتب رقم الطلب..." oninput="applyOrdersFilterAndRender()">
+            </div>
+            <div class="sort-buttons">
+              <button type="button" class="secondary-btn" onclick="setOrdersSort('date')">ترتيب بالتاريخ</button>
+              <button type="button" class="secondary-btn" onclick="setOrdersSort('total')">ترتيب بالإجمالي</button>
+              <!-- NEW: sort by order serial -->
+              <button type="button" class="secondary-btn" onclick="setOrdersSort('serial')">ترتيب برقم الطلب</button>
+            </div>
+          </div>
+
+          <!-- NEW: Download selected orders as Excel -->
+          <div style="margin:10px 0 15px; text-align:right;">
+            <button type="button" class="secondary-btn" id="downloadSelectedExcelBtn"
+                    onclick="downloadSelectedOrdersAsExcel()" disabled>
+              تحميل الطلبات المحددة كـ Excel
+            </button>
+          </div>
+
+          <div class="table-responsive">
+            <table>
+              <thead>
+                <tr>
+                  <th>اختيار</th>
+                  <th>الفرع</th>
+                  <th>رقم الطلب</th>
+                  <th>منشئ الطلب</th>
+                  <th>تاريخ الإنشاء</th>
+                  <th>الحالة</th>
+                  <th>إجمالي تقريبي</th>
+                  <th>إجراء</th>
+                </tr>
+              </thead>
+              <tbody id="approvalTableBody"></tbody>
+            </table>
+          </div>
+          <div id="approvalEmptyMessage" class="hidden"
+               style="padding:20px;text-align:center;color:#777;">
+            لا يوجد طلبات في هذا العرض حالياً.
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- APPROVAL DETAIL PAGE -->
+  <div id="approvalDetailPage" class="hidden page">
+    <header class="header">
+      <div class="header-content">
+        <div class="header-left">
+          <img src="https://www.vndro.com/wp-content/uploads/2024/09/Vndro.com-logo_Vector-1.jpg"
+               alt="Vndro Logo" class="company-logo">
+          <h1 class="welcome-message" id="welcomeMessageApprovalDetail">مرحباً</h1>
+        </div>
+        <div class="header-right">
+          <!-- Home icon -->
+          <button class="icon-btn" onclick="goHome()" aria-label="الصفحة الرئيسية">
+            <svg viewBox="0 0 24 24">
+              <path d="M4 10.5L12 4l8 6.5" />
+              <path d="M6.5 9.5V20h11V9.5" />
+            </svg>
+          </button>
+          <button class="secondary-btn" onclick="backToApprovalList()">الرجوع لقائمة الطلبات</button>
+          <button class="logout-btn" onclick="logoutOrderSystem()">تسجيل الخروج</button>
+        </div>
+      </div>
+    </header>
+
+    <div class="container">
+      <div class="products-section">
+        <div style="text-align:center; font-weight:700; color:#333; margin:20px 0;"
+             id="approvalDetailHeader">
+          تفاصيل الطلب
+        </div>
+        <div class="price-note">تنبيه: جميع الأسعار المعروضة تشمل الضريبة.</div>
+        <div class="table-responsive">
+          <table>
+            <thead>
+              <tr>
+                <th>المنتج</th>
+                <th id="appr-th-price">السعر بعد الضريبة</th>
+                <th>الكمية</th>
+                <th id="appr-th-subtotal">المجموع الفرعي</th>
+              </tr>
+            </thead>
+            <tbody id="approvalDetailTableBody"></tbody>
+          </table>
+        </div>
+        <div style="text-align:center;margin:15px 0;font-size:15px;color:#555;"
+             id="approvalDetailSummary"></div>
+
+        <div class="submit-section">
+          <button class="secondary-btn hidden" id="approvalCancelBtn"
+                  onclick="cancelCurrentOrder(event)" style="margin-inline:5px;">
+            إلغاء الطلب بالكامل
+          </button>
+          <button class="secondary-btn hidden" id="approvalSaveBtn"
+                  onclick="saveCurrentOrderChanges(event)" style="margin-inline:5px;">
+            حفظ التعديلات
+          </button>
+          <!-- NEW: Download current order as Excel -->
+          <button class="secondary-btn" id="approvalExcelBtn"
+                  onclick="downloadCurrentOrderAsExcel(event)" style="margin-inline:5px;">
+            تحميل الطلب كـ Excel
+          </button>
+          <button class="submit-btn" id="approvalConfirmBtn"
+                  onclick="approveCurrentOrder(event)">
+            اعتماد الطلب ونقله إلى الطلبات النهائية
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- BRANCH SELECT OVERLAY -->
+  <div id="branchSelectOverlay" class="hidden">
+    <div class="branch-modal">
+      <h3>اختيار الفرع</h3>
+      <p>برجاء اختيار الفرع الذي تريد إنشاء الطلب له.</p>
+      <select id="branchSelect"></select>
+      <div class="branch-modal-buttons">
+        <button class="secondary-btn" onclick="closeBranchSelect()">إلغاء</button>
+        <button class="submit-btn" style="padding:8px 20px;font-size:15px;"
+                onclick="confirmBranchSelection()">تأكيد</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- GLOBAL POPUP -->
+  <div id="globalPopupOverlay" class="hidden">
+    <div class="popup-card">
+      <h3 id="popupTitle">تم استلام الطلب</h3>
+      <p id="popupMessage">تم استلام طلبك بنجاح.</p>
+      <div class="popup-actions">
+        <button type="button" class="submit-btn" onclick="closeGlobalPopup()">حسناً</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    /* ---------------- Helpers ---------------- */
+    /* ---------------- Helpers ---------------- */
+function setCurrentPage(page) {
+  try {
+    sessionStorage.setItem('currentPage', page);
+  } catch (e) {
+    console.warn('Unable to store currentPage in sessionStorage', e);
+  }
+}
+
+function isRestricted() {
+  return sessionStorage.getItem('restricted') === '1';
+}
+function isL2() {
+  return (sessionStorage.getItem('userLevel') || 'L1').toUpperCase() === 'L2';
+}
+
+    function applyPageTransition(el) {
+      if (!el) return;
+      el.classList.remove('page-animate');
+      void el.offsetWidth;
+      el.classList.add('page-animate');
+    }
+    function showGlobalPopup(message, title) {
+      const overlay = document.getElementById('globalPopupOverlay');
+      if (!overlay) return;
+      const t = document.getElementById('popupTitle');
+      const m = document.getElementById('popupMessage');
+      if (title) t.textContent = title;
+      if (message) m.textContent = message;
+      overlay.classList.remove('hidden');
+    }
+    function closeGlobalPopup() {
+      const overlay = document.getElementById('globalPopupOverlay');
+      if (overlay) overlay.classList.add('hidden');
+    }
+
+    /* Home navigation */
+    function goHome() {
+      const username = sessionStorage.getItem('username');
+      if (!username) {
+        showLoginPage();
+        return;
+      }
+      const level = (sessionStorage.getItem('userLevel') || 'L1').toUpperCase();
+      if (level === 'L2') {
+        showL2ModePage();
+      } else {
+        showOrderPage();
+      }
+    }
+
+    /* ---------------- Login Handling ---------------- */
+    (function(){
+      const loginForm = document.getElementById('loginForm');
+      if (loginForm) {
+        loginForm.addEventListener('submit', function(e) {
+          e.preventDefault();
+          const username = document.getElementById('username').value.trim();
+          const password = document.getElementById('password').value;
+          const submitBtn = document.getElementById('submitBtn');
+          const btnText = document.getElementById('btnText');
+          const spinner = document.getElementById('spinner');
+          const errorMessage = document.getElementById('errorMessage');
+
+          errorMessage.style.display = 'none';
+          errorMessage.textContent = '';
+          submitBtn.disabled = true;
+          btnText.style.display = 'none';
+          spinner.style.display = 'block';
+
+          fetch('/api/validateLogin', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ username, password })
+          })
+          .then(res => res.json())
+          .then(function(result) {
+            if (result.success) {
+              const user = result.user || {};
+              const level = (user.level || 'L1').toUpperCase();
+
+              sessionStorage.setItem('username', username || '');
+              sessionStorage.setItem('userType', user.userType || 'tasa');
+              sessionStorage.setItem('restricted', user.restricted ? '1' : '0');
+              sessionStorage.setItem('userLevel', level);
+              sessionStorage.setItem('homeBranch', user.branch || '');
+
+              if (level === 'L2') {
+                sessionStorage.setItem('branchName', '');
+              } else {
+                sessionStorage.setItem('branchName', user.branch || '');
+              }
+
+              if (level === 'L2') {
+                showL2ModePage();
+              } else {
+                showOrderPage();
+              }
+            } else {
+              errorMessage.textContent = result.message || 'اسم المستخدم أو كلمة المرور غير صحيحة';
+              errorMessage.style.display = 'block';
+              submitBtn.disabled = false;
+              btnText.style.display = 'inline';
+              spinner.style.display = 'none';
+              document.getElementById('username').focus();
+            }
+          })
+          .catch(function(err) {
+            errorMessage.textContent = 'حدث خطأ في النظام. يرجى المحاولة مرة أخرى.';
+            errorMessage.style.display = 'block';
+            submitBtn.disabled = false;
+            btnText.style.display = 'inline';
+            spinner.style.display = 'none';
+            console.error(err);
+          });
+        });
+
+        window.addEventListener('load', function(){
+          if(document.getElementById('username')) document.getElementById('username').focus();
+        });
+
+        document.getElementById('username').addEventListener('input', () => {
+          document.getElementById('errorMessage').style.display = 'none';
+        });
+        document.getElementById('password').addEventListener('input', () => {
+          document.getElementById('errorMessage').style.display = 'none';
+        });
+      }
+    })();
+
+    function hideAllPages() {
+      document.getElementById('loginPage').classList.add('hidden');
+      document.getElementById('l2ModePage').classList.add('hidden');
+      document.getElementById('orderPage').classList.add('hidden');
+      document.getElementById('cartPage').classList.add('hidden');
+      document.getElementById('confirmationPage').classList.add('hidden');
+      document.getElementById('approvalPage').classList.add('hidden');
+      document.getElementById('approvalDetailPage').classList.add('hidden');
+    }
+
+    function showLoginPage() {
+  hideAllPages();
+  setCurrentPage('login');
+
+  document.getElementById('loginPage').classList.remove('hidden');
+  const em = document.getElementById('errorMessage');
+  if (em) { em.style.display = 'none'; em.textContent = ''; }
+  const bt = document.getElementById('btnText');
+  if (bt) bt.style.display = 'inline';
+  const sp = document.getElementById('spinner');
+  if (sp) sp.style.display = 'none';
+  const sb = document.getElementById('submitBtn');
+  if (sb) sb.disabled = false;
+  const un = document.getElementById('username');
+  if (un) un.focus();
+}
+
+    function showOrderPage(skipInit) {
+  const userLevel = (sessionStorage.getItem('userLevel') || 'L1').toUpperCase();
+  const username = sessionStorage.getItem('username');
+  if (!username) {
+    showLoginPage();
+    return;
+  }
+  if (userLevel === 'L2') {
+    const branchName = sessionStorage.getItem('branchName') || '';
+    if (!branchName) {
+      openBranchSelect('order');
+      return;
+    }
+  }
+
+  hideAllPages();
+  setCurrentPage('order');
+
+  const page = document.getElementById('orderPage');
+  page.classList.remove('hidden');
+  applyPageTransition(page);
+
+  // L2 buttons visibility (same logic as before)
+  const btnOrder = document.getElementById('l2ApproveBtn');
+  const btnCart = document.getElementById('l2ApproveBtnCart');
+  const btnConf = document.getElementById('l2ApproveBtnConfirm');
+  if (isL2()) {
+    btnOrder?.classList.remove('hidden');
+    btnCart?.classList.remove('hidden');
+    btnConf?.classList.remove('hidden');
+  } else {
+    btnOrder?.classList.add('hidden');
+    btnCart?.classList.add('hidden');
+    btnConf?.classList.add('hidden');
+  }
+
+  // Welcome text
+  const branch = sessionStorage.getItem('branchName') || orderSystemApp.branchName || '';
+  const wm = document.getElementById('welcomeMessage');
+  if (wm) wm.textContent = branch ? `مرحباً ${branch}` : 'مرحباً';
+
+  // If we came back via browser back / تعديل الطلب, don't reload products
+  if (skipInit && orderSystemApp.products && orderSystemApp.products.length) {
+    document.getElementById('loadingState').classList.add('hidden');
+    document.getElementById('productsSection').classList.remove('hidden');
+    document.getElementById('submitSection').classList.remove('hidden');
+    syncOrderPageFromCurrentOrder();
+  } else {
+    // First time (or fallback) → full init
+    initOrderPage();
+  }
+}
+
+    function showL2ModePage() {
+  hideAllPages();
+  setCurrentPage('l2Mode');
+
+  const branch = sessionStorage.getItem('homeBranch') || '';
+  const wm = document.getElementById('welcomeMessageL2');
+  if (wm) wm.textContent = branch ? `مرحباً ${branch}` : 'مرحباً';
+  const page = document.getElementById('l2ModePage');
+  page.classList.remove('hidden');
+  applyPageTransition(page);
+}
+
+    function showApprovalPage() {
+  if (!isL2()) {
+    alert('هذه الصفحة متاحة للمستخدمين من مستوى L2 فقط.');
+    showOrderPage();
+    return;
+  }
+  hideAllPages();
+  setCurrentPage('approvalList');
+
+  const page = document.getElementById('approvalPage');
+  page.classList.remove('hidden');
+  applyPageTransition(page);
+  const branch = sessionStorage.getItem('homeBranch') || '';
+  const wm = document.getElementById('welcomeMessageApproval');
+  if (wm) wm.textContent = branch ? `مرحباً ${branch}` : 'مرحباً';
+
+  // reset selection for Excel when entering approval page
+  selectedOrderSerialsForExcel = [];
+  const dlBtn = document.getElementById('downloadSelectedExcelBtn');
+  if (dlBtn) dlBtn.disabled = true;
+
+  loadPendingOrders();
+}
+
+    function showApprovalDetailPage() {
+  hideAllPages();
+  setCurrentPage('approvalDetail');
+
+  const page = document.getElementById('approvalDetailPage');
+  page.classList.remove('hidden');
+  applyPageTransition(page);
+  const branch = sessionStorage.getItem('homeBranch') || '';
+  const wm = document.getElementById('welcomeMessageApprovalDetail');
+  if (wm) wm.textContent = branch ? `مرحباً ${branch}` : 'مرحباً';
+}
+
+    window.addEventListener('DOMContentLoaded', function() {
+  const username   = sessionStorage.getItem('username');
+  const userLevel  = (sessionStorage.getItem('userLevel') || 'L1').toUpperCase();
+  const branchName = sessionStorage.getItem('branchName') || '';
+  const currentPage = sessionStorage.getItem('currentPage') || '';
+
+  // Not logged in → always go to login
+  if (!username) {
+    showLoginPage();
+    return;
+  }
+
+  // L2 logic (has L2 Mode + Approvals)
+  if (userLevel === 'L2') {
+    // If user was on approvals list → go back there
+    if (currentPage === 'approvalList') {
+      showApprovalPage();
+      return;
+    }
+
+    // If user was on approval detail → fall back to approvals list
+    if (currentPage === 'approvalDetail') {
+      showApprovalPage();
+      return;
+    }
+
+    // If user was in create-order flow
+    if (currentPage === 'order') {
+      if (!branchName) {
+        // No branch selected yet → go back to mode page
+        showL2ModePage();
+      } else {
+        showOrderPage();
+      }
+      return;
+    }
+
+    // If user was on cart or confirmation and refreshes,
+    // we can't restore quantities anyway → send them to order or L2 mode.
+    if (currentPage === 'cart' || currentPage === 'confirmation') {
+      if (!branchName) {
+        showL2ModePage();
+      } else {
+        showOrderPage();
+      }
+      return;
+    }
+
+    // Default for L2 if nothing else matches
+    showL2ModePage();
+    return;
+  }
+
+  // L1 logic
+  if (!branchName) {
+    // Should not happen usually, but safe fallback
+    showLoginPage();
+    return;
+  }
+
+  // For L1, always land on order page on refresh (quantities reset is OK)
+  showOrderPage();
+});
+
+    /* ---------------- App State ---------------- */
+    const orderSystemApp = {
+      branchName: '',
+      products: [],
+      isSubmitting: false,
+      currentOrderItems: [],
+      currentOrderTotal: 0,
+      lastSubmittedOrderItems: [],
+      categories: [],
+      currentCategory: 'ALL',
+      lastOrderSerial: '', // NEW: store last submitted order serial
+      formatCurrency(amount) {
+        return (Number(amount)||0).toFixed(2) + ' ج.م';
+      },
+      loadOrderData() {
+        const userType = sessionStorage.getItem('userType') || 'tasa';
+        const username = sessionStorage.getItem('username') || '';
+        fetch('/api/loadOrderDataWithSpending?branchName=' + encodeURIComponent(orderSystemApp.branchName) +
+              '&userType=' + encodeURIComponent(userType) +
+              '&username=' + encodeURIComponent(username))
+          .then(res => res.json())
+          .then(function(data) {
+            orderSystemApp.products = data.products || [];
+            const tbody = document.getElementById('productsTableBody');
+            if (tbody) tbody.innerHTML = '';
+            orderSystemApp.displayProducts();
+            orderSystemApp.buildCategoryTabs(); // NEW
+            document.getElementById('loadingState').classList.add('hidden');
+            document.getElementById('productsSection').classList.remove('hidden');
+            document.getElementById('submitSection').classList.remove('hidden');
+          })
+          .catch(function(error) {
+            console.error('Error loading data:', error);
+            const loadingState = document.getElementById('loadingState');
+            loadingState.innerHTML = `
+              <div style="color: #e74c3c; font-size: 18px;">
+                <p>⚠️ حدث خطأ في الاتصال</p>
+                <p style="font-size: 14px; margin-top: 10px;">يرجى التحقق من اتصال الإنترنت وتحديث الصفحة</p>
+                <button onclick="location.reload()"
+                        style="margin-top:20px; padding:10px 20px; background:#CE9D30; color:#fff; border:none; border-radius:5px; cursor:pointer; font-size:16px;">
+                  إعادة المحاولة
+                </button>
+              </div>`;
+          });
+      },
+      displayProducts() {
+        const tbody = document.getElementById('productsTableBody');
+        if (!tbody) return;
+        tbody.innerHTML = '';
+
+        if (isRestricted()) {
+          document.getElementById('th-price')?.classList.add('restricted-hide');
+          document.getElementById('th-subtotal')?.classList.add('restricted-hide');
+        } else {
+          document.getElementById('th-price')?.classList.remove('restricted-hide');
+          document.getElementById('th-subtotal')?.classList.remove('restricted-hide');
+        }
+
+        orderSystemApp.products.forEach((product, index) => {
+          const restricted = isRestricted();
+          const priceCell = restricted ? '—' : orderSystemApp.formatCurrency(product.price);
+          const initialSubtotal = restricted ? '—' : '٠٫٠٠ ج.م';
+
+          const row = document.createElement('tr');
+          row.setAttribute('data-index', index);
+          row.setAttribute('data-category', product.category || '');
+          row.innerHTML = `
+            <td>
+              <div style="display:flex; flex-direction:column; align-items:center;">
+                <img src="${product.imageUrl || 'https://via.placeholder.com/60'}"
+                     alt="${product.name}" class="product-image"
+                     style="margin-bottom:6px; max-width:60px; max-height:60px;"
+                     onerror="this.src='https://via.placeholder.com/60'">
+                <div style="font-weight:bold; font-size:14px; text-align:center;">${product.name}</div>
+              </div>
+            </td>
+            <td class="price">${priceCell}</td>
+            <td>
+              <div class="quantity-container">
+                <div class="qty-controls">
+                  <button type="button" class="qty-btn" onclick="orderSystemApp.changeQuantity(${index}, -1)">-</button>
+                  <input type="number" class="quantity-input" id="qty-${index}" min="0" value="0"
+                         onchange="orderSystemApp.updateQuantity(${index})"
+                         oninput="orderSystemApp.updateQuantity(${index})">
+                  <button type="button" class="qty-btn" onclick="orderSystemApp.changeQuantity(${index}, 1)">+</button>
+                </div>
+                <div class="warning" id="warning-${index}"></div>
+              </div>
+            </td>
+            <td class="subtotal" id="subtotal-${index}">${initialSubtotal}</td>`;
+          tbody.appendChild(row);
+        });
+
+        // Apply current category filter (in case of reload)
+        orderSystemApp.applyCategoryFilter(orderSystemApp.currentCategory || 'ALL');
+      },
+      updateQuantity(index) {
+        const p = orderSystemApp.products[index];
+        const inputEl = document.getElementById(`qty-${index}`);
+        const warning = document.getElementById(`warning-${index}`);
+        if (!inputEl || !p) return;
+
+        let requestedQty = parseInt(inputEl.value) || 0;
+        if (requestedQty < 0) {
+          requestedQty = 0;
+          inputEl.value = '0';
+        }
+
+        if (warning) {
+          warning.style.display = 'none';
+          warning.textContent = '';
+        }
+
+        const subtotalEl = document.getElementById(`subtotal-${index}`);
+        if (subtotalEl) {
+          if (isRestricted()) {
+            subtotalEl.textContent = '—';
+          } else {
+            subtotalEl.textContent =
+              orderSystemApp.formatCurrency(requestedQty * (Number(p.price) || 0));
+          }
+        }
+      },
+      /* NEW: +/- helper for order page */
+      changeQuantity(index, delta) {
+        const inputEl = document.getElementById(`qty-${index}`);
+        if (!inputEl) return;
+        let current = parseInt(inputEl.value || '0') || 0;
+        current += delta;
+        if (current < 0) current = 0;
+        inputEl.value = String(current);
+        orderSystemApp.updateQuantity(index);
+      },
+      recalculateCartTotal() {
+        let total = 0;
+        let totalQty = 0;
+        orderSystemApp.currentOrderItems.forEach(i => {
+          const qty = Number(i.quantity) || 0;
+          totalQty += qty;
+          total += Number(i.subtotal) || 0;
+        });
+        orderSystemApp.currentOrderTotal = total;
+
+        const box = document.getElementById('cartTotalBox');
+        const val = document.getElementById('cartTotalValue');
+        const label = box ? box.querySelector('.cart-total-label') : null;
+        if (!box || !val || !label) return;
+
+        if (isRestricted()) {
+          label.textContent = 'عدد الوحدات في الطلب:';
+          val.textContent = String(totalQty);
+        } else {
+          label.textContent = 'إجمالي الطلب (بعد الضريبة):';
+          val.textContent = orderSystemApp.formatCurrency(total);
+        }
+      },
+      /* NEW: Build category tabs based on unique product.category */
+      buildCategoryTabs() {
+        const container = document.getElementById('categoryTabs');
+        if (!container) return;
+        const prods = orderSystemApp.products || [];
+        if (!prods.length) {
+          container.classList.add('hidden');
+          container.innerHTML = '';
+          orderSystemApp.categories = [];
+          orderSystemApp.currentCategory = 'ALL';
+          return;
+        }
+        const unique = new Set();
+        prods.forEach(p => {
+          if (p && p.category) unique.add(p.category);
+        });
+        const categories = Array.from(unique);
+        categories.sort();
+        orderSystemApp.categories = categories;
+
+        container.innerHTML = '';
+        const makeTab = (label, value) => {
+          const btn = document.createElement('button');
+          btn.type = 'button';
+          btn.className = 'category-tab';
+          btn.textContent = label;
+          btn.dataset.category = value;
+          btn.addEventListener('click', () => {
+            orderSystemApp.applyCategoryFilter(value);
+          });
+          container.appendChild(btn);
+        };
+
+        // "All" tab
+        makeTab('الكل', 'ALL');
+        // One tab per category
+        categories.forEach(cat => makeTab(cat, cat));
+
+        container.classList.remove('hidden');
+
+        // Ensure currentCategory is valid
+        if (orderSystemApp.currentCategory !== 'ALL' &&
+            !categories.includes(orderSystemApp.currentCategory)) {
+          orderSystemApp.currentCategory = 'ALL';
+        }
+        orderSystemApp.applyCategoryFilter(orderSystemApp.currentCategory || 'ALL');
+      },
+      /* NEW: Show only products from selected category, keep quantities */
+      applyCategoryFilter(category) {
+        orderSystemApp.currentCategory = category || 'ALL';
+
+        const container = document.getElementById('categoryTabs');
+        if (container) {
+          const tabs = container.querySelectorAll('.category-tab');
+          tabs.forEach(tab => {
+            if (tab.dataset.category === orderSystemApp.currentCategory) {
+              tab.classList.add('active');
+            } else {
+              tab.classList.remove('active');
+            }
+          });
+        }
+
+        const tbody = document.getElementById('productsTableBody');
+        if (!tbody) return;
+        const rows = tbody.querySelectorAll('tr');
+        rows.forEach(row => {
+          const rowCat = row.getAttribute('data-category') || '';
+          if (orderSystemApp.currentCategory === 'ALL' || rowCat === orderSystemApp.currentCategory) {
+            row.style.display = '';
+          } else {
+            row.style.display = 'none';
+          }
+        });
+      }
+    };
+
+    /* NEW: selection state for Excel export in L2 approvals */
+    let selectedOrderSerialsForExcel = [];
+
+    /* ---------------- Expose & Page Setup ---------------- */
+    window.submitOrder = submitOrder;
+    window.logoutOrderSystem = logoutOrderSystem;
+
+    function submitOrder(e) {
+      if(e) e.preventDefault();
+      if (orderSystemApp.isSubmitting) return;
+
+      const orderItems = [];
+      let totalAmount = 0;
+
+      orderSystemApp.products.forEach((product, index) => {
+        const qtyInput = document.getElementById(`qty-${index}`);
+        const quantity = parseInt(qtyInput?.value || '0') || 0;
+        if (quantity > 0) {
+          const subtotal = quantity * (Number(product.price) || 0);
+          orderItems.push({
+            productIndex: index,
+            productCode: product.code,
+            productName: product.name,
+            category: product.category,
+            unitPrice: product.price,
+            quantity,
+            subtotal
+          });
+          totalAmount += subtotal;
+        }
+      });
+
+      if (orderItems.length === 0) {
+        alert('يرجى اختيار منتج واحد على الأقل');
+        return;
+      }
+
+      orderSystemApp.currentOrderItems = orderItems;
+      orderSystemApp.currentOrderTotal = totalAmount;
+      showCartPage();
+    }
+
+    function logoutOrderSystem() {
+      if (confirm('هل تريد تسجيل الخروج؟')) {
+        // Clear session storage
+        sessionStorage.clear();
+
+        // Reset in-memory app state (including lastOrderSerial)
+        orderSystemApp.branchName = '';
+        orderSystemApp.products = [];
+        orderSystemApp.isSubmitting = false;
+        orderSystemApp.currentOrderItems = [];
+        orderSystemApp.currentOrderTotal = 0;
+        orderSystemApp.lastSubmittedOrderItems = [];
+        orderSystemApp.categories = [];
+        orderSystemApp.currentCategory = 'ALL';
+        orderSystemApp.lastOrderSerial = '';
+        selectedOrderSerialsForExcel = [];
+
+        hideAllPages();
+        showLoginPage();
+      }
+    }
+
+    function hardLogout() {
+      try {
+        sessionStorage.clear();
+        localStorage.clear();
+
+        // Also reset in-memory app state
+        orderSystemApp.branchName = '';
+        orderSystemApp.products = [];
+        orderSystemApp.isSubmitting = false;
+        orderSystemApp.currentOrderItems = [];
+        orderSystemApp.currentOrderTotal = 0;
+        orderSystemApp.lastSubmittedOrderItems = [];
+        orderSystemApp.categories = [];
+        orderSystemApp.currentCategory = 'ALL';
+        orderSystemApp.lastOrderSerial = '';
+        selectedOrderSerialsForExcel = [];
+
+        document.cookie.split(';').forEach(c => {
+          const eqPos = c.indexOf('=');
+          const name = (eqPos > -1 ? c.substr(0, eqPos) : c).trim();
+          if (name) {
+            document.cookie = name + '=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/';
+          }
+        });
+      } catch (e) { /* ignore */ }
+      window.location.replace('/');
+    }
+
+    function initOrderPage() {
+      orderSystemApp.branchName = sessionStorage.getItem('branchName') || '';
+      const username = sessionStorage.getItem('username') || '';
+      if (!orderSystemApp.branchName || !username) {
+        showLoginPage();
+        return;
+      }
+      const wm = document.getElementById('welcomeMessage');
+      if (wm) wm.textContent = `مرحباً ${orderSystemApp.branchName}`;
+
+      document.getElementById('loadingState').classList.remove('hidden');
+      document.getElementById('productsSection').classList.add('hidden');
+      document.getElementById('submitSection').classList.add('hidden');
+
+      orderSystemApp.loadOrderData();
+    }
+
+    // Handle browser Back/Forward so we keep quantities on Order/Cart/Confirmation
+window.addEventListener('popstate', function(event) {
+  const state = event.state || {};
+  const page = state.page;
+
+  if (page === 'cart') {
+    // Back from Confirmation → Cart (keep quantities)
+    showCartPage(true);
+  } else if (page === 'confirmation') {
+    // Forward navigation edge case → show Confirmation again
+    showConfirmationPage(true);
+  } else {
+    // Initial entry or unknown → treat as Order page (keep quantities if we have them)
+    showOrderPage(true);
+  }
+});
+
+    /* ---------------- CART & CONFIRMATION ---------------- */
+    function showCartPage(fromHistory) {
+  // When we go from Order → Cart normally, push a history state.
+  // When called from browser back (popstate), fromHistory = true → no new state.
+  if (!fromHistory) {
+    try {
+      history.pushState({ page: 'cart' }, '', window.location.href);
+    } catch (e) {
+      console.warn('history.pushState cart failed', e);
+    }
+  }
+
+  hideAllPages();
+  setCurrentPage('cart');
+
+  const page = document.getElementById('cartPage');
+  page.classList.remove('hidden');
+  applyPageTransition(page);
+
+  const branchName = sessionStorage.getItem('branchName') ||
+                     orderSystemApp.branchName || '';
+  const wm = document.getElementById('welcomeMessageCart');
+  if (wm) wm.textContent = branchName ? `مرحباً ${branchName}` : 'مرحباً';
+
+  if (isRestricted()) {
+    document.getElementById('cart-th-price')?.classList.add('restricted-hide');
+    document.getElementById('cart-th-subtotal')?.classList.add('restricted-hide');
+  } else {
+    document.getElementById('cart-th-price')?.classList.remove('restricted-hide');
+    document.getElementById('cart-th-subtotal')?.classList.remove('restricted-hide');
+  }
+
+  const tbody = document.getElementById('cartTableBody');
+  if (!tbody) return;
+  tbody.innerHTML = '';
+
+  orderSystemApp.currentOrderItems.forEach((item, index) => {
+    const restricted = isRestricted();
+    const priceCell = restricted ? '—' : orderSystemApp.formatCurrency(item.unitPrice);
+    const subtotalCell = restricted ? '—' : orderSystemApp.formatCurrency(item.subtotal);
+    const product = orderSystemApp.products[item.productIndex] || {};
+
+    const row = document.createElement('tr');
+    row.innerHTML = `
+      <td>
+        <div style="display:flex;flex-direction:column;align-items:center;">
+          <img src="${product.imageUrl || 'https://via.placeholder.com/60'}"
+               alt="${item.productName}" class="product-image"
+               style="margin-bottom:6px;max-width:60px;max-height:60px;"
+               onerror="this.src='https://via.placeholder.com/60'">
+          <div style="font-weight:bold;font-size:14px;text-align:center;">${item.productName}</div>
+        </div>
+      </td>
+      <td>${priceCell}</td>
+      <td>
+        <div class="quantity-container">
+          <div class="qty-controls">
+            <button type="button" class="qty-btn" onclick="changeCartQty(${index}, -1)">-</button>
+            <input type="number" class="quantity-input" min="0" value="${item.quantity}"
+                   data-cart-index="${index}"
+                   oninput="handleCartQtyChange(${index})"
+                   onchange="handleCartQtyChange(${index})">
+            <button type="button" class="qty-btn" onclick="changeCartQty(${index}, 1)">+</button>
+          </div>
+        </div>
+      </td>
+      <td id="cart-subtotal-${index}">${subtotalCell}</td>`;
+    tbody.appendChild(row);
+  });
+
+  const btnCart = document.getElementById('l2ApproveBtnCart');
+  if (isL2()) btnCart?.classList.remove('hidden');
+  else btnCart?.classList.add('hidden');
+
+  orderSystemApp.recalculateCartTotal();
+}
+
+    function handleCartQtyChange(cartIndex) {
+      const items = orderSystemApp.currentOrderItems;
+      const item = items[cartIndex];
+      const input = document.querySelector('input[data-cart-index="' + cartIndex + '"]');
+      if (!item || !input) return;
+
+      let qty = parseInt(input.value || '0') || 0;
+      if (qty < 0) qty = 0;
+      input.value = String(qty);
+
+      item.quantity = qty;
+      item.subtotal = qty * (Number(item.unitPrice) || 0);
+
+      const restricted = isRestricted();
+      const subtotalCell = document.getElementById('cart-subtotal-' + cartIndex);
+      if (subtotalCell) {
+        subtotalCell.textContent = restricted ? '—'
+          : orderSystemApp.formatCurrency(item.subtotal);
+      }
+
+      orderSystemApp.recalculateCartTotal();
+    }
+
+    /* NEW: +/- helper for cart page */
+    function changeCartQty(cartIndex, delta) {
+      const input = document.querySelector('input[data-cart-index="' + cartIndex + '"]');
+      if (!input) return;
+      let current = parseInt(input.value || '0') || 0;
+      current += delta;
+      if (current < 0) current = 0;
+      input.value = String(current);
+      handleCartQtyChange(cartIndex);
+    }
+
+    function backToOrderFromCart() {
+  // Use browser history so behaviour is identical to pressing the Back button
+  try {
+    history.back();
+  } catch (e) {
+    // Fallback: show order page without re-init
+    showOrderPage(true);
+  }
+}
+
+    function confirmCart(e) {
+      if (e) e.preventDefault();
+      if (orderSystemApp.isSubmitting) return;
+
+      const branchName = orderSystemApp.branchName ||
+                         sessionStorage.getItem('branchName') || '';
+      const username = sessionStorage.getItem('username') || '';
+      const userType = sessionStorage.getItem('userType') || 'tasa';
+      if (!branchName || !username) {
+        alert('حدث خطأ في بيانات المستخدم. يرجى تسجيل الدخول مرة أخرى.');
+        hardLogout();
+        return;
+      }
+
+      const plainItems = orderSystemApp.currentOrderItems
+        .filter(i => (i.quantity || 0) > 0)
+        .map(i => ({
+          productCode: i.productCode,
+          productName: i.productName,
+          category: i.category,
+          unitPrice: i.unitPrice,
+          quantity: i.quantity,
+          subtotal: i.subtotal
+        }));
+
+      if (plainItems.length === 0) {
+        alert('لا يوجد منتجات في السلة.');
+        showOrderPage();
+        return;
+      }
+
+      let confirmMessage;
+      if (isRestricted()) {
+        const totalQty = plainItems.reduce((acc, i) => acc + (i.quantity || 0), 0);
+        confirmMessage =
+          `عدد الوحدات في الطلب: ${totalQty}\n\nهل تريد تأكيد وإرسال الطلب؟`;
+      } else {
+        confirmMessage =
+          `عدد المنتجات: ${plainItems.length}\n` +
+          `إجمالي تقديري: ${orderSystemApp.formatCurrency(orderSystemApp.currentOrderTotal)}\n\n` +
+          `هل تريد تأكيد وإرسال الطلب؟`;
+      }
+      if (!confirm(confirmMessage)) return;
+
+      orderSystemApp.isSubmitting = true;
+      const btn = document.getElementById('cartConfirmBtn');
+      if (btn) {
+        btn.disabled = true;
+        btn.textContent = 'جاري إرسال الطلب...';
+      }
+
+      fetch('/api/submitOrder', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ branchName, orderItems: plainItems, userType, username })
+      })
+      .then(res => res.json())
+      .then(function(result) {
+        orderSystemApp.isSubmitting = false;
+        if (btn) {
+          btn.disabled = false;
+          btn.textContent = 'تأكيد وإرسال الطلب';
+        }
+        if (result.success) {
+          // NEW: capture returned order serial (supporting multiple possible keys)
+          const orderSerial = result.orderSerial || result.orderNumber || result.serial || '';
+          orderSystemApp.lastOrderSerial = orderSerial;
+
+          orderSystemApp.lastSubmittedOrderItems = plainItems.slice();
+          renderConfirmationPage();
+          showConfirmationPage();
+
+          if (isL2()) {
+            showGlobalPopup('تم استلام طلبك وتم تسجيله في الطلبات النهائية بنجاح.', 'تم استلام الطلب');
+          } else {
+            showGlobalPopup('تم إرسال طلبك وهو الآن في انتظار الموافقة من الإدارة.', 'تم استلام الطلب');
+          }
+
+          orderSystemApp.products.forEach((_, index) => {
+            const qtyInput = document.getElementById(`qty-${index}`);
+            if (qtyInput) {
+              qtyInput.value = '0';
+              orderSystemApp.updateQuantity(index);
+            }
+          });
+          orderSystemApp.currentOrderItems = [];
+          orderSystemApp.currentOrderTotal = 0;
+        } else {
+          alert('حدث خطأ: ' + (result.message || 'فشل إرسال الطلب'));
+        }
+      })
+      .catch(function(error) {
+        console.error('Submit error:', error);
+        alert('حدث خطأ في إرسال الطلب. يرجى المحاولة مرة أخرى.');
+        orderSystemApp.isSubmitting = false;
+        if (btn) {
+          btn.disabled = false;
+          btn.textContent = 'تأكيد وإرسال الطلب';
+        }
+      });
+    }
+
+    function renderConfirmationPage() {
+      const tbody = document.getElementById('confirmationTableBody');
+      if (!tbody) return;
+      tbody.innerHTML = '';
+
+      if (isRestricted()) {
+        document.getElementById('conf-th-price')?.classList.add('restricted-hide');
+        document.getElementById('conf-th-subtotal')?.classList.add('restricted-hide');
+      } else {
+        document.getElementById('conf-th-price')?.classList.remove('restricted-hide');
+        document.getElementById('conf-th-subtotal')?.classList.remove('restricted-hide');
+      }
+
+      orderSystemApp.lastSubmittedOrderItems.forEach(item => {
+        const product = orderSystemApp.products.find(p => p.code === item.productCode) || {};
+        const priceCell = isRestricted() ? '—' : orderSystemApp.formatCurrency(item.unitPrice);
+        const subtotalCell = isRestricted() ? '—' : orderSystemApp.formatCurrency(item.subtotal);
+
+        const row = document.createElement('tr');
+        row.innerHTML = `
+          <td>
+            <div style="display:flex;flex-direction:column;align-items:center;">
+              <img src="${product.imageUrl || 'https://via.placeholder.com/60'}"
+                   alt="${item.productName}" class="product-image"
+                   style="margin-bottom:6px;max-width:60px;max-height:60px;"
+                   onerror="this.src='https://via.placeholder.com/60'">
+              <div style="font-weight:bold;font-size:14px;text-align:center;">${item.productName}</div>
+            </div>
+          </td>
+          <td>${priceCell}</td>
+          <td>${item.quantity}</td>
+          <td>${subtotalCell}</td>`;
+        tbody.appendChild(row);
+      });
+
+      const branchName = sessionStorage.getItem('branchName') ||
+                         orderSystemApp.branchName || '';
+      const wm = document.getElementById('welcomeMessageConfirm');
+      if (wm) wm.textContent = branchName ? `مرحباً ${branchName}` : 'مرحباً';
+
+      const btnConf = document.getElementById('l2ApproveBtnConfirm');
+      if (isL2()) btnConf?.classList.remove('hidden');
+      else btnConf?.classList.add('hidden');
+
+      const statusEl = document.getElementById('confirmationStatusText');
+      if (statusEl) {
+        if (isL2()) {
+          statusEl.textContent = 'تم استلام طلبك بنجاح وتم تسجيله في الطلبات النهائية.';
+        } else {
+          statusEl.textContent = 'تم إرسال طلبك وهو الآن في انتظار الموافقة من الإدارة.';
+        }
+      }
+
+      // NEW: show order serial (if available) to the user
+      const serialBox = document.getElementById('orderSerialBox');
+      if (serialBox) {
+        if (orderSystemApp.lastOrderSerial) {
+          serialBox.textContent = 'رقم الطلب الخاص بك: ' + orderSystemApp.lastOrderSerial;
+          serialBox.style.display = 'block';
+        } else {
+          serialBox.textContent = '';
+          serialBox.style.display = 'none';
+        }
+      }
+    }
+
+    function showConfirmationPage(fromHistory) {
+  // When going Cart → Confirmation in normal flow, push a history state.
+  // When returning via browser Back, fromHistory = true → no new state.
+  if (!fromHistory) {
+    try {
+      history.pushState({ page: 'confirmation' }, '', window.location.href);
+    } catch (e) {
+      console.warn('history.pushState confirmation failed', e);
+    }
+  }
+
+  hideAllPages();
+  setCurrentPage('confirmation');
+
+  const page = document.getElementById('confirmationPage');
+  page.classList.remove('hidden');
+  applyPageTransition(page);
+}
+
+    /* ---------------- L2 Branch Selection ---------------- */
+    let l2BranchesCache = [];
+    let branchSelectNextAction = null;
+
+    function ensureBranchesForL2(callback) {
+      if (!isL2()) {
+        alert('هذه الوظيفة متاحة للمستخدمين من مستوى L2 فقط.');
+        return;
+      }
+      if (l2BranchesCache.length > 0) {
+        callback(l2BranchesCache);
+        return;
+      }
+      const username = sessionStorage.getItem('username') || '';
+      fetch('/api/branchesForL2?username=' + encodeURIComponent(username))
+        .then(res => res.json())
+        .then(data => {
+          const branches = data.branches || [];
+          l2BranchesCache = branches;
+          callback(branches);
+        })
+        .catch(err => {
+          console.error('Error loading branches for L2:', err);
+          alert('حدث خطأ في تحميل قائمة الفروع.');
+        });
+    }
+
+    function openBranchSelect(nextAction) {
+      if (!isL2()) {
+        alert('هذه الوظيفة متاحة للمستخدمين من مستوى L2 فقط.');
+        return;
+      }
+      branchSelectNextAction = nextAction || 'order';
+
+      ensureBranchesForL2(function(branches) {
+        const sel = document.getElementById('branchSelect');
+        sel.innerHTML = '';
+
+        if (!branches || branches.length === 0) {
+          const opt = document.createElement('option');
+          opt.value = '';
+          opt.textContent = 'لا يوجد فروع متاحة';
+          sel.appendChild(opt);
+          sel.disabled = true;
+        } else {
+          sel.disabled = false;
+          branches.forEach(b => {
+            const opt = document.createElement('option');
+            opt.value = b;
+            opt.textContent = b;
+            sel.appendChild(opt);
+          });
+          const current =
+            sessionStorage.getItem('branchName') ||
+            sessionStorage.getItem('homeBranch') || '';
+          if (current) {
+            sel.value = current;
+          }
+        }
+        document.getElementById('branchSelectOverlay').classList.remove('hidden');
+      });
+    }
+
+    function closeBranchSelect() {
+      document.getElementById('branchSelectOverlay').classList.add('hidden');
+      branchSelectNextAction = null;
+    }
+
+    function confirmBranchSelection() {
+      const sel = document.getElementById('branchSelect');
+      const branch = sel.value;
+      if (!branch) {
+        alert('برجاء اختيار الفرع أولاً.');
+        return;
+      }
+      sessionStorage.setItem('branchName', branch);
+      document.getElementById('branchSelectOverlay').classList.add('hidden');
+
+      if (branchSelectNextAction === 'order') {
+        showOrderPage();
+      } else {
+        showOrderPage();
+      }
+      branchSelectNextAction = null;
+    }
+
+    /* L2 buttons behaviour */
+    function startL2CreateOrder() {
+      if (!isL2()) {
+        alert('هذه الوظيفة متاحة للمستخدمين من مستوى L2 فقط.');
+        return;
+      }
+      openBranchSelect('order');
+    }
+    function startL2ApproveOrders() {
+      if (!isL2()) {
+        alert('هذه الوظيفة متاحة للمستخدمين من مستوى L2 فقط.');
+        return;
+      }
+      showApprovalPage();
+    }
+
+    /* ---------------- L2 Approvals: Orders list ---------------- */
+    let pendingOrdersCache = [];
+    let filteredOrdersView = [];
+    let currentApprovalOrder = null;
+    let ordersSortBy = 'date';
+
+    function translateStatus(status) {
+      const s = (status || '').toString().trim().toLowerCase();
+      if (!s) return '';
+      if (s.includes('waiting')) return 'في انتظار الموافقة';
+      if (s.includes('approved')) return 'معتمد';
+      if (s.includes('cancel')) return 'ملغي';
+      return status || '';
+    }
+
+    function loadPendingOrders() {
+      const tbody = document.getElementById('approvalTableBody');
+      const emptyMsg = document.getElementById('approvalEmptyMessage');
+      if (tbody) tbody.innerHTML = '';
+      if (emptyMsg) emptyMsg.classList.add('hidden');
+
+      const username = sessionStorage.getItem('username') || '';
+      fetch('/api/ordersSummary?username=' + encodeURIComponent(username))
+        .then(res => res.json())
+        .then(data => {
+          const orders = data.orders || [];
+          pendingOrdersCache = orders;
+          applyOrdersFilterAndRender();
+        })
+        .catch(err => {
+          console.error('Error loading orders summary:', err);
+          alert('حدث خطأ في تحميل قائمة الطلبات.');
+        });
+    }
+
+    function applyOrdersFilterAndRender() {
+      const tbody = document.getElementById('approvalTableBody');
+      const emptyMsg = document.getElementById('approvalEmptyMessage');
+      if (!tbody) return;
+      tbody.innerHTML = '';
+
+      const statusSel = document.getElementById('statusFilter');
+      const searchInput = document.getElementById('branchSearch');
+      const serialSearchInput = document.getElementById('serialSearch');
+      const status = statusSel ? statusSel.value : 'ALL';
+      const search = (searchInput?.value || '').trim().toLowerCase();
+      const serialSearch = (serialSearchInput?.value || '').trim().toLowerCase();
+
+      let list = pendingOrdersCache.slice();
+
+      if (status !== 'ALL') {
+        const filterVal = status.toLowerCase();
+        list = list.filter(o => {
+          const s = (o.status || '').toString().trim().toLowerCase();
+          if (!s) return false;
+          if (filterVal === 'waiting') return s.includes('waiting');
+          if (filterVal === 'approved') return s.includes('approved');
+          if (filterVal === 'cancelled') return s.includes('cancel');
+          return true;
+        });
+      }
+
+      if (search) {
+        list = list.filter(o =>
+          (o.branchName || '').toString().toLowerCase().includes(search)
+        );
+      }
+
+      if (serialSearch) {
+        list = list.filter(o => {
+          const serialVal = (o.serial || o.orderSerial || o.orderNumber || '').toString().toLowerCase();
+          return serialVal.includes(serialSearch);
+        });
+      }
+
+      if (ordersSortBy === 'date') {
+        list.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+      } else if (ordersSortBy === 'total') {
+        list.sort((a, b) => (Number(b.total) || 0) - (Number(a.total) || 0));
+      } else if (ordersSortBy === 'serial') {
+        list.sort((a, b) => {
+          const sa = parseInt((a.serial || a.orderSerial || a.orderNumber || '').toString().replace(/\D/g, '')) || 0;
+          const sb = parseInt((b.serial || b.orderSerial || b.orderNumber || '').toString().replace(/\D/g, '')) || 0;
+          return sb - sa; // descending by serial
+        });
+      }
+
+      filteredOrdersView = list;
+
+      if (!filteredOrdersView.length) {
+        if (emptyMsg) emptyMsg.classList.remove('hidden');
+        updateDownloadSelectedExcelButtonState();
+        return;
+      } else {
+        if (emptyMsg) emptyMsg.classList.add('hidden');
+      }
+
+      filteredOrdersView.forEach((order, index) => {
+        const tr = document.createElement('tr');
+        const total = Number(order.total) || 0;
+        const statusLabel = translateStatus(order.status);
+        const serial = (order.serial || order.orderSerial || order.orderNumber || '').toString();
+        const isChecked = serial && selectedOrderSerialsForExcel.includes(serial);
+
+        tr.innerHTML = `
+          <td>
+            <input type="checkbox"
+                   class="order-select-checkbox"
+                   data-serial="${serial}"
+                   ${isChecked ? 'checked' : ''}
+                   onchange="toggleOrderExcelSelection(this)">
+          </td>
+          <td><span class="tag tag-branch">${order.branchName || ''}</span></td>
+          <td><span class="tag">${serial || '-'}</span></td>
+          <td><span class="tag tag-user">${order.requestedBy || ''}</span></td>
+          <td><span class="tag tag-date">${order.createdAt || ''}</span></td>
+          <td><span class="tag">${statusLabel}</span></td>
+          <td>${orderSystemApp.formatCurrency(total)}</td>
+          <td>
+            <button class="secondary-btn" onclick="openApprovalDetail(${index})">
+              عرض الطلب
+            </button>
+          </td>`;
+        tbody.appendChild(tr);
+      });
+
+      updateDownloadSelectedExcelButtonState();
+    }
+
+    function setOrdersSort(mode) {
+      if (mode === 'total') {
+        ordersSortBy = 'total';
+      } else if (mode === 'serial') {
+        ordersSortBy = 'serial';
+      } else {
+        ordersSortBy = 'date';
+      }
+      applyOrdersFilterAndRender();
+    }
+
+    /* NEW: manage selection for multi-order Excel export */
+    function toggleOrderExcelSelection(checkboxEl) {
+      if (!checkboxEl) return;
+      const serial = (checkboxEl.getAttribute('data-serial') || '').toString();
+      if (!serial) {
+        checkboxEl.checked = false;
+        return;
+      }
+      if (checkboxEl.checked) {
+        if (!selectedOrderSerialsForExcel.includes(serial)) {
+          selectedOrderSerialsForExcel.push(serial);
+        }
+      } else {
+        selectedOrderSerialsForExcel = selectedOrderSerialsForExcel.filter(s => s !== serial);
+      }
+      updateDownloadSelectedExcelButtonState();
+    }
+
+    function updateDownloadSelectedExcelButtonState() {
+      const btn = document.getElementById('downloadSelectedExcelBtn');
+      if (!btn) return;
+      btn.disabled = !selectedOrderSerialsForExcel.length;
+    }
+
+    // NEW version: download selected orders as Excel in the SAME tab
+function downloadSelectedOrdersAsExcel() {
+  const username = sessionStorage.getItem('username') || '';
+  if (!username) {
+    alert('انتهت الجلسة، برجاء تسجيل الدخول مرة أخرى.');
+    hardLogout();
+    return;
+  }
+
+  // All checkboxes for orders in the approval list
+  const selectedSerials = Array.from(
+    document.querySelectorAll('.order-select-checkbox:checked')
+  )
+    .map(cb => cb.dataset.serial)
+    .filter(Boolean);
+
+  if (selectedSerials.length === 0) {
+    alert('برجاء اختيار طلب واحد على الأقل.');
+    return;
+  }
+
+  const params = new URLSearchParams({
+    username,
+    serials: selectedSerials.join(',')
+  });
+
+  // IMPORTANT: same-tab download – no new tab, no new sessionStorage
+  window.location.href = '/api/exportOrdersExcel?' + params.toString();
+}
+
+    /* ---------------- L2 Approvals: Details & editing ---------------- */
+    function renderApprovalDetail(order) {
+      if (!order) return;
+      currentApprovalOrder = order;
+
+      const header = document.getElementById('approvalDetailHeader');
+      const summary = document.getElementById('approvalDetailSummary');
+      const tbody = document.getElementById('approvalDetailTableBody');
+      const statusLabel = translateStatus(order.status);
+      const serialDisplay = (order.serial || order.orderSerial || order.orderNumber || '');
+
+      if (header) {
+        header.innerHTML =
+          `تفاصيل الطلب - ` +
+          `<span class="tag tag-branch">${order.branchName || ''}</span>
+           &nbsp; <span class="tag tag-user">أنشأه: ${order.requestedBy || ''}</span>
+           &nbsp; <span class="tag tag-date">${order.createdAt || ''}</span>
+           &nbsp; <span class="tag">${statusLabel}</span>
+           &nbsp; <span class="tag">رقم الطلب: ${serialDisplay || '-'}</span>`;
+      }
+
+      const isEditable =
+        (order.status || '').toLowerCase().startsWith('waiting') && isL2();
+
+      if (tbody) {
+        tbody.innerHTML = '';
+        const restricted = isRestricted();
+        (order.items || []).forEach((item, index) => {
+          const priceCell = restricted ? '—'
+            : orderSystemApp.formatCurrency(item.unitPrice);
+          const subtotalVal = item.subtotal != null
+            ? item.subtotal
+            : (Number(item.unitPrice) || 0) * (Number(item.quantity) || 0);
+          item.subtotal = subtotalVal;
+          const subtotalCell = restricted ? '—'
+            : orderSystemApp.formatCurrency(subtotalVal);
+
+          const qtyCell = isEditable
+            ? `<input type="number" class="quantity-input" min="0" value="${item.quantity}"
+                       data-approval-index="${index}"
+                       oninput="handleApprovalQtyChange(${index})"
+                       onchange="handleApprovalQtyChange(${index})">`
+            : `${item.quantity}`;
+
+          const row = document.createElement('tr');
+          row.innerHTML = `
+            <td>${item.productName}</td>
+            <td>${priceCell}</td>
+            <td>${qtyCell}</td>
+            <td id="appr-subtotal-${index}">${subtotalCell}</td>`;
+          tbody.appendChild(row);
+        });
+      }
+
+      if (summary) {
+        const total = (order.items || []).reduce(
+          (sum, it) => sum + (Number(it.subtotal) || 0), 0
+        );
+        order.total = total;
+        summary.textContent =
+          'الإجمالي التقريبي للطلب: ' + orderSystemApp.formatCurrency(total);
+      }
+
+      if (isRestricted()) {
+        document.getElementById('appr-th-price')?.classList.add('restricted-hide');
+        document.getElementById('appr-th-subtotal')?.classList.add('restricted-hide');
+      } else {
+        document.getElementById('appr-th-price')?.classList.remove('restricted-hide');
+        document.getElementById('appr-th-subtotal')?.classList.remove('restricted-hide');
+      }
+
+      const saveBtn = document.getElementById('approvalSaveBtn');
+      const cancelBtn = document.getElementById('approvalCancelBtn');
+      const approveBtn = document.getElementById('approvalConfirmBtn');
+      if (isEditable) {
+        saveBtn?.classList.remove('hidden');
+        cancelBtn?.classList.remove('hidden');
+        approveBtn?.classList.remove('hidden');
+      } else {
+        saveBtn?.classList.add('hidden');
+        cancelBtn?.classList.add('hidden');
+        approveBtn?.classList.add('hidden');
+      }
+      // Excel button always visible (for any status) – no change needed here
+    }
+
+    function openApprovalDetail(orderIndex) {
+      const order = filteredOrdersView[orderIndex];
+      if (!order) {
+        alert('لم يتم العثور على الطلب.');
+        return;
+      }
+
+      showApprovalDetailPage();
+
+      const tbody = document.getElementById('approvalDetailTableBody');
+      const summary = document.getElementById('approvalDetailSummary');
+      if (tbody) {
+        tbody.innerHTML =
+          '<tr><td colspan="4" style="text-align:center;color:#555;">جاري تحميل تفاصيل الطلب...</td></tr>';
+      }
+      if (summary) summary.textContent = '';
+
+      // If items already exist
+      if (Array.isArray(order.items) && order.items.length > 0) {
+        renderApprovalDetail(order);
+        return;
+      }
+
+      const username = sessionStorage.getItem('username') || '';
+      const orderSerial = (order.serial || order.orderSerial || order.orderNumber || '').toString();
+      const orderStatus = order.status || '';
+
+      fetch('/api/orderDetailsForL2', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username, serial: orderSerial, status: orderStatus })
+      })
+      .then(res => res.json())
+      .then(data => {
+        if (!data || !data.success) {
+          console.error('Error loading order details:', data && data.message);
+          if (tbody) {
+            tbody.innerHTML =
+              '<tr><td colspan="4" style="text-align:center;color:#c0392b;">تعذر تحميل تفاصيل الطلب.</td></tr>';
+          }
+          return;
+        }
+        order.items = data.items || data.lines || [];
+        // ensure serial is set on the order object
+        order.serial = order.serial || orderSerial;
+        renderApprovalDetail(order);
+      })
+      .catch(err => {
+        console.error('Error loading order details:', err);
+        if (tbody) {
+          tbody.innerHTML =
+            '<tr><td colspan="4" style="text-align:center;color:#c0392b;">حدث خطأ أثناء تحميل تفاصيل الطلب.</td></tr>';
+        }
+      });
+    }
+
+    function handleApprovalQtyChange(idx) {
+      if (!currentApprovalOrder || !Array.isArray(currentApprovalOrder.items)) return;
+      const input = document.querySelector('input[data-approval-index="' + idx + '"]');
+      const item = currentApprovalOrder.items[idx];
+      if (!input || !item) return;
+
+      let qty = parseInt(input.value || '0') || 0;
+      if (qty < 0) qty = 0;
+      input.value = String(qty);
+      item.quantity = qty;
+
+      const unit = Number(item.unitPrice) || 0;
+      item.subtotal = unit * qty;
+      const cell = document.getElementById('appr-subtotal-' + idx);
+      if (cell) {
+        cell.textContent = isRestricted() ? '—' : orderSystemApp.formatCurrency(item.subtotal);
+      }
+
+      const total = currentApprovalOrder.items.reduce(
+        (sum, it) => sum + (Number(it.subtotal) || 0), 0
+      );
+      currentApprovalOrder.total = total;
+      const summary = document.getElementById('approvalDetailSummary');
+      if (summary) {
+        summary.textContent =
+          'الإجمالي التقريبي للطلب: ' + orderSystemApp.formatCurrency(total);
+      }
+    }
+
+    function backToApprovalList() {
+      currentApprovalOrder = null;
+      showApprovalPage();
+    }
+
+    function saveCurrentOrderChanges(e) {
+      if (e) e.preventDefault();
+      if (!currentApprovalOrder || !Array.isArray(currentApprovalOrder.items)) {
+        alert('لا يوجد طلب محدد.');
+        return;
+      }
+      const username = sessionStorage.getItem('username') || '';
+      const orderSerial = (currentApprovalOrder.serial ||
+                           currentApprovalOrder.orderSerial ||
+                           currentApprovalOrder.orderNumber ||
+                           '').toString();
+
+        const payload = {
+        username,
+        orderId: orderSerial,   // ✅ use orderId instead of serial
+        items: currentApprovalOrder.items.map(it => ({
+          productCode: it.productCode,
+          quantity: it.quantity
+        }))
+      };
+
+      const btn = document.getElementById('approvalSaveBtn');
+      if (btn) {
+        btn.disabled = true;
+        btn.textContent = 'جاري حفظ التعديلات...';
+      }
+
+      fetch('/api/updateWaitingOrder', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      })
+      .then(res => res.json())
+      .then(data => {
+        if (btn) {
+          btn.disabled = false;
+          btn.textContent = 'حفظ التعديلات';
+        }
+        if (data.success) {
+          const idx = pendingOrdersCache.findIndex(o =>
+            (o.serial || o.orderSerial || o.orderNumber || '').toString() === orderSerial
+          );
+          if (idx !== -1) {
+            pendingOrdersCache[idx] = {
+              ...pendingOrdersCache[idx],
+              total: currentApprovalOrder.total,
+              items: currentApprovalOrder.items.slice()
+            };
+          }
+          applyOrdersFilterAndRender();
+          showGlobalPopup('تم حفظ التعديلات على الطلب بنجاح.', 'تم الحفظ');
+        } else {
+          alert(data.message || 'فشل في حفظ التعديلات.');
+        }
+      })
+      .catch(err => {
+        console.error('Error saving order changes:', err);
+        if (btn) {
+          btn.disabled = false;
+          btn.textContent = 'حفظ التعديلات';
+        }
+        alert('حدث خطأ أثناء حفظ التعديلات.');
+      });
+    }
+
+   function syncOrderPageFromCurrentOrder() {
+  if (!orderSystemApp.currentOrderItems || !orderSystemApp.currentOrderItems.length) {
+    return;
+  }
+
+  orderSystemApp.currentOrderItems.forEach(item => {
+    const idx = item.productIndex;
+    const qtyInput = document.getElementById(`qty-${idx}`);
+    if (qtyInput) {
+      qtyInput.value = String(item.quantity);
+      orderSystemApp.updateQuantity(idx);
+    }
+  });
+}
+
+    
+      function cancelCurrentOrder(e) {
+      if (e) e.preventDefault();
+      if (!currentApprovalOrder) {
+        alert('لا يوجد طلب محدد.');
+        return;
+      }
+      if (!confirm('هل أنت متأكد من إلغاء هذا الطلب بالكامل؟')) return;
+
+      const username = sessionStorage.getItem('username') || '';
+      const orderSerial = (currentApprovalOrder.serial ||
+                           currentApprovalOrder.orderSerial ||
+                           currentApprovalOrder.orderNumber ||
+                           '').toString();
+
+      const btn = document.getElementById('approvalCancelBtn');
+      if (btn) {
+        btn.disabled = true;
+        btn.textContent = 'جاري الإلغاء...';
+      }
+
+            fetch('/api/cancelOrder', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username, orderId: orderSerial })  // ✅ orderId instead of serial
+      })
+      .then(res => res.json())
+      .then(data => {
+        if (btn) {
+          btn.disabled = false;
+          btn.textContent = 'إلغاء الطلب بالكامل';
+        }
+        if (data.success) {
+          showGlobalPopup('تم إلغاء الطلب بنجاح.', 'تم الإلغاء');
+          const idx = pendingOrdersCache.findIndex(o =>
+            (o.serial || o.orderSerial || o.orderNumber || '').toString() === orderSerial
+          );
+          if (idx !== -1) {
+            pendingOrdersCache[idx] = {
+              ...pendingOrdersCache[idx],
+              status: 'Cancelled'
+            };
+          }
+          currentApprovalOrder = null;
+          showApprovalPage();
+        } else {
+          alert(data.message || 'فشل في إلغاء الطلب.');
+        }
+      })
+      .catch(err => {
+        console.error('Error cancelling order:', err);
+        if (btn) {
+          btn.disabled = false;
+          btn.textContent = 'إلغاء الطلب بالكامل';
+        }
+        alert('حدث خطأ أثناء إلغاء الطلب.');
+      });
+    }
+
+    function approveCurrentOrder(e) {
+      if (e) e.preventDefault();
+      if (!currentApprovalOrder) {
+        alert('لا يوجد طلب محدد.');
+        return;
+      }
+      const confirmText = 'هل تريد اعتماد هذا الطلب ونقله إلى الطلبات النهائية؟';
+      if (!confirm(confirmText)) return;
+
+      const btn = document.getElementById('approvalConfirmBtn');
+      if (btn) {
+        btn.disabled = true;
+        btn.textContent = 'جاري الاعتماد...';
+      }
+
+      const username = sessionStorage.getItem('username') || '';
+      const orderSerial = (currentApprovalOrder.serial ||
+                           currentApprovalOrder.orderSerial ||
+                           currentApprovalOrder.orderNumber ||
+                           '').toString();
+
+      const payload = { username, serial: orderSerial };
+
+      fetch('/api/approveOrder', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      })
+      .then(res => res.json())
+      .then(data => {
+        if (btn) {
+          btn.disabled = false;
+          btn.textContent = 'اعتماد الطلب ونقله إلى الطلبات النهائية';
+        }
+        if (data.success) {
+          showGlobalPopup('تم اعتماد الطلب ونقله إلى الطلبات النهائية.', 'تم الاعتماد');
+          const idx = pendingOrdersCache.findIndex(o =>
+            (o.serial || o.orderSerial || o.orderNumber || '').toString() === orderSerial
+          );
+          if (idx !== -1) {
+            pendingOrdersCache[idx] = {
+              ...pendingOrdersCache[idx],
+              status: 'Approved'
+            };
+          }
+          currentApprovalOrder = null;
+          showApprovalPage();
+        } else {
+          alert(data.message || 'فشل في اعتماد الطلب.');
+        }
+      })
+      .catch(err => {
+        console.error('Error approving order:', err);
+        if (btn) {
+          btn.disabled = false;
+          btn.textContent = 'اعتماد الطلب ونقله إلى الطلبات النهائية';
+        }
+        alert('حدث خطأ أثناء اعتماد الطلب.');
+      });
+    }
+
+    /* NEW: download current order as a standalone Excel file */
+   // NEW version: download current order as Excel in the SAME tab
+function downloadCurrentOrderAsExcel() {
+  if (!currentApprovalOrder) {
+    alert('لا يوجد طلب محدد.');
+    return;
+  }
+
+  const username = sessionStorage.getItem('username') || '';
+  if (!username) {
+    alert('انتهت الجلسة، برجاء تسجيل الدخول مرة أخرى.');
+    hardLogout();
+    return;
+  }
+
+  const serial = (
+    currentApprovalOrder.serial ||
+    currentApprovalOrder.orderSerial ||
+    currentApprovalOrder.orderNumber ||
+    ''
+  ).toString();
+
+  if (!serial) {
+    alert('لم يتم العثور على رقم الطلب.');
+    return;
+  }
+
+  const params = new URLSearchParams({ username, serial });
+
+  // IMPORTANT: same-tab download
+  window.location.href = '/api/exportOrderExcel?' + params.toString();
+}
+  </script>
+</body>
+</html>
